@@ -35,3 +35,6 @@ include ../../MAKE/TARGETS.MAK
 
 .PHONY: platform
 platform:  $(LIBRARY)
+
+clean:
+	@rm -f $(OBJS) $(LIBRARY) $(AOBJS)

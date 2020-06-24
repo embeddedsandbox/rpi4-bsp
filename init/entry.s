@@ -35,7 +35,7 @@ _start:
     MRS     X30, CurrentEL  // assume we are in EL1
  
 //--------------------------------------------------------------------------------------------
-// Setup the SP for each EL0
+// Setup the SP for each EL1
 //--------------------------------------------------------------------------------------------
     MRS	    X0, MPIDR_EL1               // get the CPU 
     AND	    X0, x0, 0xFF                // x0 now has the cpu
@@ -67,30 +67,6 @@ _start:
 # OsInit
 # this should be mostly in C, but for now we will run without any Kernel/Os
 #--------------------------------------------------------------------------------------------
-OsInit:
-
-    // Setup the stack pointer for the application layer
-    MRS	    X0, MPIDR_EL1               // get the CPU 
-    AND	    X0, x0, 0xFF                // x0 now has the cpu
-    MOV	    X1, 16                      // 1x4bytes entry per EL per cpu
-    MUL	    X1, X0, X1                  // mul by 4
-    ADR	    X2, app_stack_pointer_table
-    ADD	    X1, X1, X2 
-    LDR	    X1, [x1]
-    MSR	    SP_EL0, X1
-
-    // Setup the Execution state of EL0 
-    MOV	    X1, SPSR_AARCH64_EL0        // EL1 Execution State
-    MSR	    SPSR_EL1, X1
-
-    // Send secondary CPU's to a hold loop. 
-    // Send CPU 0 to the main
-    CMP	    X0, #0		
-    BNE	    secondaryCpuLoop
-
-    ADR	    X0, taskStart
-    MSR	    ELR_EL1, X0
-    ERET 
 
 #--------------------------------------------------------------------------------------------
 # This is
