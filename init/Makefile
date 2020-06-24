@@ -7,10 +7,10 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,34 +20,18 @@
 # THE SOFTWARE.
 #==============================================================================
 
+include ../../MAKE/RULES.MAK 
 
-# eventually these variables should be passed in 
+BUILDROOT=.
 BUILDDIR=.
-BUILDROOT=../../
 
-ASRC=startup.s
-CSRC=boot.c
+CSRC	= platformInit.c
+ASRC	= entry.s
+SRCDIR  = $(CURDIR)
+LIBRARY = $(BUILDROOT)/libplatform.a
+INC		+= -I../include
 
-include $(BUILDROOT)/MAKE/RULES.MAK
+include ../../MAKE/TARGETS.MAK
 
-OUTPUT_FILE=
-
-INC+='-I../include'
-
-#------------------------------------------------------------------------------
-#  default rule.  Make the bootloader.bin file
-#------------------------------------------------------------------------------
-bootloader.bin: boot.o startup.o bootloader.ld
-	$(LD) $(LINK_FLAGS) -o $(BUILDDIR)/bootloader.elf -T $(BUILDDIR)/bootloader.ld
-	$(OBJCOPY) -O binary $(BUILDDIR)/bootloader.elf $(BUILDDIR)/bootloader.bin
-
-
-#------------------------------------------------------------------------------
-#  clean remove all the object and binary files. 
-#------------------------------------------------------------------------------
-clean:
-	-@rm -f $(BUILDDIR)/bootloader.bin
-	-@rm -f $(BUILDDIR)/bootloader.elf
-	-@rm -f $(BUILDDIR)/startup.o
-	-@rm -f $(BUILDDIR)/boot.o
-
+.PHONY: platform
+platform:  $(LIBRARY)
