@@ -23,7 +23,7 @@
 
 # eventually these variables should be passed in 
 BUILDDIR=.
-BUILDROOT=../../
+BUILDROOT=$(CURDIR)/../../
 
 ASRC=startup.s
 CSRC=boot.c

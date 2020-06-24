@@ -19,3 +19,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
 # THE SOFTWARE.
 #==============================================================================
+
+.PHONY: all boot init
+
+SUBDIRS := boot init
+
+all: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) -C $@ -f Makefile
+
+
+clean: 
+	@rm -f *.o *.a 
+	$(foreach subdir, $(SUBDIRS), $(shell $(MAKE) -C $(subdir) clean))
+	
+

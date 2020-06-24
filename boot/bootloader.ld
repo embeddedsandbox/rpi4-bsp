@@ -28,7 +28,6 @@ MEMORY
     ROM (rx): ORIGIN = 0x80000000, LENGTH = 1024M
 }
 
-
 SECTIONS
 {
     secure 0x00000 : 
