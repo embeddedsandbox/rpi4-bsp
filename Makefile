@@ -20,7 +20,7 @@
 # THE SOFTWARE.
 #==============================================================================
 
-.PHONY: all boot init
+.PHONY: all boot init clean boot_clean
 
 SUBDIRS := init
 
@@ -35,6 +35,9 @@ boot:
 	mkdir -p $(BUILDDIR)/$@
 	$(MAKE) SRCDIR=$(SRCDIR)/boot BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C $@ -f Makefile
 
+boot_clean:
+	$(MAKE) SRCDIR=$(SRCDIR)/boot BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C boot -f Makefile clean
+
 $(SUBDIRS):
 	mkdir -p $(BUILDDIR)/$@
 	$(MAKE) SRCDIR=$(SRCDIR)/$@ BUILDROOT=$(BUILDROOT) BUILDDIR=$(BUILDDIR)/$@ -C $@ -f Makefile
@@ -42,4 +45,5 @@ $(SUBDIRS):
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
 #------------------------------------------------------------------------------
-clean: subdir_clean
+clean:  boot_clean subdir_clean
+

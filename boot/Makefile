@@ -20,6 +20,8 @@
 # THE SOFTWARE.
 #==============================================================================
 
+.PHONY: clean local_clean_objs
+
 # eventually these variables should be passed in 
 SRCROOT=$(CURDIR)/../../
 ASRC=startup.s
@@ -39,7 +41,12 @@ bootloader.bin: $(OBJS) $(AOBJS) bootloader.ld
 
 include $(SRCROOT)/MAKE/TARGETS.MAK
 
+local_clean:
+
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
 #------------------------------------------------------------------------------
-clean: local_clean
+clean: local_clean_objs local_clean_aobjs
+	rm $(BUILDROOT)/*.map;
+	rm $(BUILDROOT)/*.bin
+	rm $(BUILDROOT)/*.elf

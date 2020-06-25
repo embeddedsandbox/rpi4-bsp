@@ -39,4 +39,4 @@ platform:  $(LIBRARY)
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
 #------------------------------------------------------------------------------
-clean: local_clean
+clean: local_clean_objs local_clean_aobjs local_clean_lib
