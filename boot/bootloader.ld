@@ -32,9 +32,9 @@ SECTIONS
 {
     secure 0x00000 : 
 	{
-		startup.o(.text) 
-		boot.o(.*)
-
+        /*startup.o(.text) */
+        *(.startup)
+        *(.text)
 		. = ALIGN(16);
 		. = . + 2048;
 		_el3StackCpu0	= . ;
@@ -44,8 +44,7 @@ SECTIONS
 		_el3StackCpu2	= . ;
 		. = . + 2048;
 		_el3StackCpu3	= . ;
-
-        startup.o(.data)
+        *(.data)
 
     } > RAM
 

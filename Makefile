@@ -22,16 +22,24 @@
 
 .PHONY: all boot init
 
-SUBDIRS := boot init
+SUBDIRS := init
 
-all: $(SUBDIRS)
+include ../MAKE/RULES.MAK
+
+all: boot $(SUBDIRS)
+
+include ../MAKE/TARGETS.MAK
+
+
+boot:
+	mkdir -p $(BUILDDIR)/$@
+	$(MAKE) SRCDIR=$(SRCDIR)/boot BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C $@ -f Makefile
 
 $(SUBDIRS):
-	$(MAKE) -C $@ -f Makefile
+	mkdir -p $(BUILDDIR)/$@
+	$(MAKE) SRCDIR=$(SRCDIR)/$@ BUILDROOT=$(BUILDROOT) BUILDDIR=$(BUILDDIR)/$@ -C $@ -f Makefile
 
-
-clean: 
-	@rm -f *.o *.a 
-	$(foreach subdir, $(SUBDIRS), $(shell $(MAKE) -C $(subdir) clean))
-	
-
+#------------------------------------------------------------------------------
+#  clean remove all the object and binary files. 
+#------------------------------------------------------------------------------
+clean: subdir_clean

@@ -20,34 +20,26 @@
 # THE SOFTWARE.
 #==============================================================================
 
-
 # eventually these variables should be passed in 
-BUILDDIR=.
-BUILDROOT=$(CURDIR)/../../
-
+SRCROOT=$(CURDIR)/../../
 ASRC=startup.s
 CSRC=boot.c
 
-include $(BUILDROOT)/MAKE/RULES.MAK
-
-OUTPUT_FILE=
+include $(SRCROOT)/MAKE/RULES.MAK
 
 INC+='-I../include'
+LFLAGS      =  -L$(BUILDROOT)
 
 #------------------------------------------------------------------------------
 #  default rule.  Make the bootloader.bin file
 #------------------------------------------------------------------------------
-bootloader.bin: boot.o startup.o bootloader.ld
-	$(LD) $(LINK_FLAGS) -o $(BUILDDIR)/bootloader.elf -T $(BUILDDIR)/bootloader.ld
+bootloader.bin: $(OBJS) $(AOBJS) bootloader.ld
+	$(LD) $(LFLAGS) -Map=$(BUILDROOT)/bootloader.map -o $(BUILDDIR)/bootloader.elf -T bootloader.ld $(AOBJS) $(OBJS)
 	$(OBJCOPY) -O binary $(BUILDDIR)/bootloader.elf $(BUILDDIR)/bootloader.bin
 
+include $(SRCROOT)/MAKE/TARGETS.MAK
 
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
 #------------------------------------------------------------------------------
-clean:
-	-@rm -f $(BUILDDIR)/bootloader.bin
-	-@rm -f $(BUILDDIR)/bootloader.elf
-	-@rm -f $(BUILDDIR)/startup.o
-	-@rm -f $(BUILDDIR)/boot.o
-
+clean: local_clean
