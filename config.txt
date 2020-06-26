@@ -1,0 +1,12 @@
+###############################################################################
+# config.txt file for Raspberry Pi 4
+###############################################################################
+enable_gic=1
+enable_jtag_gpio=1
+start_file=start4.elf
+fixup_file=fixup4.dat
+arm_64bit=1
+kernel_address=0x80000
+kernel=nite_owl.bin
+armstub=blp.bin
+disable_commandline_tags=1

@@ -23,11 +23,10 @@
 .include "aarch64.i"
 .include "config.i"
 
-.equ    MAGIC_NUMBER,       0x5AFE570B
-.equ    KERNEL_ENTRY,       0x00080000
-.equ    SYSTEM_TIMER_FREQ,  54000000
-.equ    ARM_LOCAL_CONTROL,  0x4c0000000
-
+.EQU    MAGIC_NUMBER,       0x5AFE570B
+.EQU    KERNEL_ENTRY,       0x00080000
+.EQU    SYSTEM_TIMER_FREQ,  54000000
+.EQU    ARM_LOCAL_CONTROL,  0x4c0000000
 .EQU    CACHE_TYPE_MASK,    0x00000007
 
 //-----------------------------------------------------------------------------
@@ -40,7 +39,6 @@ _start:
     // Put the CPU into a default execution state.  This will get fixed up
     // right before we move to another exception level
     //-------------------------------------------------------------------------
-
     MRS     X1, SCTLR_EL3
     LDR     X0, =SCTLR_EL3_DEFAULT
     MSR     SCTLR_EL3, X0
@@ -186,7 +184,10 @@ _start:
     ERET
 
 secureOsInit:
-    B       .
+    ADR     X4, kernelEntry
+    LDR     X4, [X4]
+    BR      X4
+
 /*
     //----------------------------------
     // jump to the kernel Entry point 
@@ -298,6 +299,7 @@ El3_stack_pointer_table:
 //-----------------------------------------------------------------------------
 // Interrupt vector Table
 //-----------------------------------------------------------------------------
+
 .align (10)
 .global El3VectorTable
 El3VectorTable:

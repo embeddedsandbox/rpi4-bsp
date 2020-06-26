@@ -30,17 +30,16 @@ all: boot $(SUBDIRS)
 
 include ../MAKE/TARGETS.MAK
 
-
+#
+# NOTE the boot laoder is itself a seperate binary, so we will build this
+# with its own buidroot
+#
 boot:
 	mkdir -p $(BUILDDIR)/$@
 	$(MAKE) SRCDIR=$(SRCDIR)/boot BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C $@ -f Makefile
 
 boot_clean:
 	$(MAKE) SRCDIR=$(SRCDIR)/boot BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C boot -f Makefile clean
-
-$(SUBDIRS):
-	mkdir -p $(BUILDDIR)/$@
-	$(MAKE) SRCDIR=$(SRCDIR)/$@ BUILDROOT=$(BUILDROOT) BUILDDIR=$(BUILDDIR)/$@ -C $@ -f Makefile
 
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
