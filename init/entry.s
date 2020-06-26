@@ -69,6 +69,8 @@ secondaryCpuLoop:
     WFE
     B	secondaryCpuLoop
 
+.section .data
+.balign(16)
 El1_stack_pointer_table:
     .quad   _el1StackCpu0
     .quad   _el1StackCpu1
