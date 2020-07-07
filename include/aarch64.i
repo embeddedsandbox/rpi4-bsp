@@ -54,7 +54,9 @@
 //------------------------------------------------------------------------------
 .EQU	HRC_EXECUTION_STATE_MASK,       (~0X0080000000)
 .EQU	HCR_EXECUTION_STATE_AARCH64,    ( 0X0080000000)
-.EQU    HCR_EL2_DEFAULT,                (HCR_EXECUTION_STATE_AARCH64)
+.EQU    HCR_SWIO_STATE_MASK,            (~0X0000000002)
+.EQU    HCR_SWIO_STATE,                 ( 0X0000000002)
+.EQU    HCR_EL2_DEFAULT,                (HCR_EXECUTION_STATE_AARCH64 | HCR_SWIO_STATE)
 
 //------------------------------------------------------------------------------
 //  SCTLR REGISTER EQUATES

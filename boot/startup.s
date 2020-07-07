@@ -29,6 +29,17 @@
 .EQU    ARM_LOCAL_CONTROL,  0x4c0000000
 .EQU    CACHE_TYPE_MASK,    0x00000007
 
+.EQU    MEM_DESC_DRAM,                      0xFFFFA5A500000002
+.EQU    MEM_DESC_VIDEO_RAM,                 0xFFFFA5A500000003
+.EQU    MEM_DESC_VID_L2_CACHED_ALLOC,       0xFFFFA5A500000005
+.EQU    MEM_DESC_VID_L2_CACHED_NONALLOC,    0xFFFFA5A500000006
+.EQU    MEM_DESC_MMIO,                      0xFFFFA5A500000007
+.EQU    MEM_DESC_PCIE_MMIO,                 0xFFFFA5A500000008
+.EQU    MEM_DESC_TABLE_END,                 0xFFFFA5A5AAAAAAAA
+
+
+
+
 //-----------------------------------------------------------------------------
 // Board init 
 //-----------------------------------------------------------------------------
@@ -423,5 +434,73 @@ dtb_ptr32:
 
 kernel_entry:
     .word 0
+
+
+//=============================================================================
+//
+//=============================================================================
+// Hard code this for now.  Will Generate this later
+memory_descriptor_table:
+    // First 512Mb
+    .dword      MEM_DESC_DRAM
+    .dword      0x0000000000000000
+    .dword      0x0000000020000000
+
+    // Second 512Mb
+    .dword      MEM_DESC_VIDEO_RAM
+    .dword      0x0000000020000000
+    .dword      0x0000000020000000
+
+    // 3Gb of Normal Memory
+    .dword      MEM_DESC_DRAM
+    .dword      0x0000000040000000
+    .dword      0x00000000C0000000
+
+    .dword      MEM_DESC_VID_L2_CACHED_ALLOC
+    .dword      0x0000000400000000
+    .dword      0x0000000040000000
+
+    // Main Peripherals
+    .dword      MEM_DESC_MMIO
+    .dword      0x000000047C000000
+    .dword      0x0000000004000000
+
+    // VC L2 CACHED
+    .dword      MEM_DESC_VID_L2_CACHED_NONALLOC
+    .dword      0x0000000480000000
+    .dword      0x0000000040000000
+
+    // ARM Local Peripherals
+    .dword      MEM_DESC_MMIO
+    .dword      0x00000004C0000000
+    .dword      0x0000000030000000
+
+    // PCI MEMORY
+    .dword      MEM_DESC_PCIE_MMIO
+    .dword      0x0000000060000000
+    .dword      0x0000000020000000
+
+    .dword      MEM_DESC_TABLE_END
+    .dword      MEM_DESC_TABLE_END
+    .dword      MEM_DESC_TABLE_END  
+
+//=============================================================================
+//
+//=============================================================================
+.section .bss
+.balign 16;
+
+.space 2048
+_el3StackCpu0:
+
+.space 2048;
+_el3StackCpu1:
+
+.space 2048;
+_el3StackCpu2:
+
+.space 2048;
+_el3StackCpu3:
+
 
 .end

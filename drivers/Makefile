@@ -20,37 +20,19 @@
 # THE SOFTWARE.
 #==============================================================================
 
-#
-# NOTE the boot laoder is itself a seperate binary, so we will build this
-# with its own buidroot
-#
+CSRC	:= mailbox.c framebuffer.c miniuart.c bcm_emmc.c
+ASRC	:= 
+INC		+= -I../include
 
-.PHONY: clean local_clean_objs
+include $(SRCROOT)/MAKE/RULES.MAK 
 
-# eventually these variables should be passed in 
-SRCROOT	=$(CURDIR)/../../
-ASRC	=startup.s
-CSRC	=boot.c
-
-include $(SRCROOT)/MAKE/RULES.MAK
-
-INC+= -I../include
-INC+= -I../../rtos/arc/aarch64/common_peripherals/include
-LFLAGS      =  -L$(BUILDROOT)
-
-#------------------------------------------------------------------------------
-#  default rule.  Make the boot loader program blp.bin 
-#------------------------------------------------------------------------------
-blp.bin: $(OBJS) $(AOBJS) blp.ld
-	$(LD) $(LFLAGS) -Map=$(BUILDROOT)/blp.map -o $(BUILDDIR)/blp.elf -T blp.ld $(AOBJS) $(OBJS)
-	$(OBJCOPY) -O binary $(BUILDDIR)/blp.elf $(BUILDDIR)/blp.bin
+.PHONY: all
+all: LIBRARY
 
 include $(SRCROOT)/MAKE/TARGETS.MAK
 
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
 #------------------------------------------------------------------------------
-clean: local_clean_objs local_clean_aobjs
-	rm -f $(BUILDROOT)/*.map;
-	rm -f $(BUILDROOT)/*.bin
-	rm -f $(BUILDROOT)/*.elf
+clean: local_clean_objs local_clean_aobjs local_clean_lib
+

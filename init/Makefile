@@ -20,23 +20,20 @@
 # THE SOFTWARE.
 #==============================================================================
 
-#
-# These should be passed in by the root level build rather than be defined here
-#
-SRCROOT=$(CURDIR)/../..
 
-CSRC	= platformInit.c
-ASRC	= entry.s
-LIBRARY = $(BUILDROOT)/libplatform.a
+CSRC	:= platforminit.c platform.c
+ASRC	:= entry.s
 INC		+= -I../include
 
 include $(SRCROOT)/MAKE/RULES.MAK 
-include $(SRCROOT)/MAKE/TARGETS.MAK
 
-.PHONY: platform
-platform:  $(LIBRARY)
+.PHONY: all 
+all: LIBRARY $(SUBDIRS) $(AOBJS)
+
+include $(SRCROOT)/MAKE/TARGETS.MAK
 
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
 #------------------------------------------------------------------------------
 clean: local_clean_objs local_clean_aobjs local_clean_lib
+

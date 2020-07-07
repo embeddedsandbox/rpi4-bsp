@@ -30,9 +30,7 @@
 .section .entry
 .global _entry
 _entry:
-
-    MRS     X30, CurrentEL  // assume we are in EL1
-    B       .
+    MRS     X30, CurrentEL              // assume we are in EL1
 
 //-----------------------------------------------------------------------------
 // Setup the SP for each EL1
@@ -48,17 +46,13 @@ _entry:
     MOV	    SP, X1
 
 //-----------------------------------------------------------------------------
-// init MPU & VA
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// Enable and MMU Cache
+// Setup an array of memory regions and put the pointer into a global for the 
+//  Memory manager to use
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 //  allow the OS to initialize itself
 //-----------------------------------------------------------------------------
-    
     // one way ticket to the Os
     B	    OsInit 
 
@@ -77,16 +71,20 @@ El1_stack_pointer_table:
     .quad   _el1StackCpu2
     .quad   _el1StackCpu3
 
+
+//=============================================================================
+//
+//=============================================================================
 //-----------------------------------------------------------------------------
 // Security Monitor Vector Table
 //-----------------------------------------------------------------------------
 
-.align (9)
+.balign (512)
 
 //-----------------------------------------------------------------------------
 // Secure Os Vector Table
 //-----------------------------------------------------------------------------
-.align (8)
+.balign (256)
 SecureOsVectorTable:
 //-------------------------
 // current EL with SP0
@@ -94,53 +92,53 @@ SecureOsVectorTable:
 sos_synchronous_cur_el_sp0:
     B	.
 
-.align(8)
+.balign(0x80)
 sos_irq_cur_el_sp0:
     B	.
 
-.align(8)
+.balign(0x80)
 sos_fiq_cur_el_sp0:
     B	.
 
-.align(8)
+.balign(0x80)
 sos_serr_cur_el_sp0:
     B	.
 
 //-------------------------
 // current EL with SPX
 //-------------------------
-.align(8)
+.balign(0x8)
 sos_synchronous_cur_el_spx:
     B	.
 
-.align(8)
+.balign(0x80)
 sos_irq_cur_el_spx:
     B	.
 
-.align(8)
+.balign(0x80)
 sos_fiq_cur_el_spx:
     B	.
 
-.align(8)
+.balign(0x80)
 sos_serr_cur_el_spx:
     B	.
 
 //-------------------------
 // Lower EL using aarch64
 //-------------------------
-.align(8)
+.balign(0x80)
 sosSyncLwrEl_aarch64:
     B	.
 
-.align(8)
+.balign(0x80)
 sosIrqLwrEl_aarch64:
     B	.
 
-.align(8)
+.balign(0x80)
 sosFiqLwrEl_aarch64:
     B	.
 
-.align(8)
+.balign(0x80)
 sosSerrLwrEl_aarch64:
     B	.
 
@@ -148,21 +146,42 @@ sosSerrLwrEl_aarch64:
 //-------------------------
 // Lower EL using aarch32
 //-------------------------
-.align(8)
+.balign(0x80)
 sosSyncLwrEl_aarch32:
     B	.
 
-.align(8)
+.balign(0x80)
 sosIrqLwrEl_aarch32:
     B	.
 
-.align(8)
+.balign(0x80)
 sosFiqLwrEl_aarch32:
     B	.
 
-.align(8)
+.balign(0x80)
 sosSerrLwrEl_arch32:
     B	.
+
+
+//=============================================================================
+//
+//=============================================================================
+.if 0
+.section .bss
+
+ .balign (16);
+.space  4096;
+_el1StackCpu0:
+
+.space 4096
+_el1StackCpu1:
+
+.space 4096
+_el1StackCpu2:
+
+.space 4096
+_el1StackCpu3:
+.endif
 
 
     .end

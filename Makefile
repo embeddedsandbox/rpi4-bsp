@@ -22,7 +22,9 @@
 
 .PHONY: all boot init clean boot_clean
 
-SUBDIRS := init
+SUBDIRS := drivers init 
+LIBRARY	:=$(BUILDROOT)/librpi4-bsp.a
+
 
 include ../MAKE/RULES.MAK
 
@@ -30,19 +32,18 @@ all: boot $(SUBDIRS)
 
 include ../MAKE/TARGETS.MAK
 
-#
 # NOTE the boot laoder is itself a seperate binary, so we will build this
 # with its own buidroot
 #
 boot:
 	mkdir -p $(BUILDDIR)/$@
-	$(MAKE) SRCDIR=$(SRCDIR)/boot BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C $@ -f Makefile
+	$(MAKE) SRCDIR=$(SRCDIR)/boot LIBRARY=$(BUILDDIR)/boot/libboot.a BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C $@ -f Makefile
 
 boot_clean:
-	$(MAKE) SRCDIR=$(SRCDIR)/boot BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C boot -f Makefile clean
+	$(MAKE) SRCDIR=$(SRCDIR)/boot LIBRARY=$(BUILDDIR)/libboot.a BUILDROOT=$(BUILDDIR)/boot BUILDDIR=$(BUILDDIR)/boot -C boot -f Makefile clean
 
 #------------------------------------------------------------------------------
 #  clean remove all the object and binary files. 
 #------------------------------------------------------------------------------
-clean:  boot_clean subdir_clean
+clean:  boot_clean subdir_clean local_clean_lib
 

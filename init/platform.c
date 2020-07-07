@@ -20,7 +20,17 @@
 // THE SOFTWARE.
 //==============================================================================
 
+#include "types.h"
 
-typedef unsigned long long  uint64_t;
-typedef unsigned long       uint32_t;
-typedef unsigned short      uint16_t;
+uint32_t    gVideoMemory[2];  // [0] start [1] size  note this is below the 1Gb boundary 
+uint64_t    gVideoMemoryStart;
+uint64_t    gVideoMemoryEnd;
+uint32_t    gLowMemory[2];
+uint64_t    gTopOfMemory;
+uint64_t    gBoardSerialNumber;
+uint64_t    gMacAddress;
+uint32_t    gFwVersion;
+uint32_t    gHwModel;
+uint32_t    gBoardVersion;
+
+

@@ -24,6 +24,7 @@
 #include "types.h"
 #include "boot.h"
 #include "devices.h"
+#include "gic400.h"
 
 //=============================================================================
 // LOCAL VARIABLES
@@ -55,7 +56,7 @@ uint32_t static inline getCpuId(void)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void static inline boot_init_set_sys_freq(uint32_t frequency)
+void static inline bootInitSetSysFreq(uint32_t frequency)
 {
     __asm(
         "MSR     CNTFRQ_EL0,  %[freq]        \n"
@@ -65,6 +66,78 @@ void static inline boot_init_set_sys_freq(uint32_t frequency)
     );
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void initGicCpu(void)
+{
+    gic400CpuMmio_t*    gicCpuMmio  = (gic400CpuMmio_t*)((0x4C0420000));
+    
+    gicCpuMmio->intPriorityMask     = 0xFF;
+    gicCpuMmio->ctrl                = 1;
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void initGicDistributor(void)
+{
+    uint32_t numInterrupts;
+    gic400DistributorMmio_t*    gicDistMmio = (gic400DistributorMmio_t*)((0x4C0410000));
+
+
+    gicDistMmio->ctrl = 0;              // disable the gic to do the initialization
+    numInterrupts = 32*((gicDistMmio->intCtrlrType & 0x1F)+1);
+
+
+    // disable all interrupts then clear any pending and active interrupts
+    // then let the OS re-enable them as it needs to.
+
+    // Disable all interrupts
+    gicDistMmio->intClrEnable[0]            = 0x0000FFFF;
+    gicDistMmio->intClrActive[0]            = 0x0000FFFF;
+    gicDistMmio->intClrPend[0]              = 0x0000FFFF;
+
+
+    // disable and clear all interrupts
+    for (int idx = 1; idx < numInterrupts/32 ; idx++)
+    {
+        gicDistMmio->intGroup[idx]                  = 0;    // move all interrupts to group 0
+        gicDistMmio->nonSecureAccessControl[idx]    = 0;    // make all interrupts secure
+        gicDistMmio->intClrEnable[idx]              = 0xFFFFFFFF;
+        gicDistMmio->intClrActive[idx]              = 0xFFFFFFFF;
+        gicDistMmio->intClrPend[idx]                = 0xFFFFFFFF;
+
+    }
+
+    // set the priority for each interrupt
+    // the default will be priority level 127
+    // this puts the all in the middle of the map
+    // Group 0 interrupts should always be 0x00-0x7F
+    // Group 1 interrupts should always be 0x80-0xFF
+    for (int idx = 0; idx < numInterrupts/4; idx++)
+    {
+        gicDistMmio->intPriority[idx]               = 0x7F7F7F7F;   
+    }
+
+    // route all interrupts to all CPUs
+    // first 8 regsiters are RO because they are
+    // CPU Private
+    for (int idx = 8; idx < numInterrupts/4; idx++)
+    {
+        gicDistMmio->intTargets[idx]    = 0x0F0F0F0F;
+    }
+
+    // configure all of the interrupts as level
+    for (int idx = 2; idx < numInterrupts/2; idx++)
+    {
+            // for now set them all to level sensitive
+        gicDistMmio->intConfig[idx]     = 0xAAAAAAAA;
+    }
+
+    initGicCpu();
+}
+
 //==============================================================================
 // PUBLIC FUNCTIONS
 //==============================================================================
@@ -72,12 +145,9 @@ void static inline boot_init_set_sys_freq(uint32_t frequency)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void boot_init_system_peripheral_clock(void)
+void bootInitSystemPeripheralXlock(void)
 {
- //   sys_peripheral_clk->system_clock_control   = ARM_PERIPHERAL_CLOCK_DEFAULT;
- //   sys_peripheral_clk->system_clock_prescaler = 
-
-    boot_init_set_sys_freq(ARM_PERIPHERAL_CLOCK_FREQ);
+    bootInitSetSysFreq(ARM_PERIPHERAL_CLOCK_FREQ);
 }
 
 //-----------------------------------------------------------------------------
@@ -85,10 +155,12 @@ void boot_init_system_peripheral_clock(void)
 //-----------------------------------------------------------------------------
 void systemInit(void)
 {
-    boot_init_system_peripheral_clock();
-
+    bootInitSystemPeripheralXlock();
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void exceptionTableInitEl3(uint32_t cpu)
 {
     __asm(
@@ -100,13 +172,19 @@ void exceptionTableInitEl3(uint32_t cpu)
     );
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void gicInitEl3(uint32_t cpu)
 {
-    // set the group of each interrupt in the gic
-
+    initGicDistributor();
+    initGicCpu();
 
 }
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
 void mmuInitEl3(uint32_t cpu)
 {
 

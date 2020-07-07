@@ -10,3 +10,4 @@ kernel_address=0x80000
 kernel=nite_owl.bin
 armstub=blp.bin
 disable_commandline_tags=1
+arm_peri_high=1
