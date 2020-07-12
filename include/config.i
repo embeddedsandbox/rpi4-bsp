@@ -24,28 +24,26 @@
 //------------------------------------------------------------------------------
 // SCTLR_EL3_DEFAULT
 //------------------------------------------------------------------------------
-.EQU    SCLTR_EL3_RESERVED,         (0x11<<28 | 1<<23 | 1<<18 | 1<<16 | 0x11<<4 )
-.EQU    SCLTR_EL3_DEFAULT_BITS,    ((SCTLR_DSSBS_BIT) | (SCTLR_SP_ALIGN_CHECK_BIT) | (SCTLR_ALIGN_CHECK_BIT))
+.EQU    SCLTR_EL3_RESERVED,         (0b11<<28 | 0b11<<22 | 1<<18 | 1<<16 | 0b11<<4 )
+.EQU    SCLTR_EL3_DEFAULT_BITS,     ((SCTLR_SP_ALIGN_CHECK_BIT))
 .EQU    SCTLR_EL3_DEFAULT,          (SCLTR_EL3_RESERVED | SCLTR_EL3_DEFAULT_BITS) 
 
 //------------------------------------------------------------------------------
 // SCTLR_EL2_DEFAULT
 //------------------------------------------------------------------------------
-.EQU    SCLTR_EL2_RESERVED,         (0) // TODO
-.EQU    SCLTR_EL2_DEFAULT_UPPER,    (0) // TODO
-.EQU    SCLTR_EL2_DEFAULT_MIDDLE,   (0) // TODO
-.EQU    SCLTR_EL2_DEFAULT_LOWER,    (0) // TODO
-.EQU    SCTLR_EL2_DEFAULT,          (SCLTR_EL2_RESERVED | SCLTR_EL2_DEFAULT_UPPER | SCLTR_EL2_DEFAULT_MIDDLE | SCLTR_EL2_DEFAULT_LOWER)
+.EQU    SCLTR_EL2_RESERVED,         (0b11<<28 | 0b11<<22 | 1<<18 | 1<<16 | 0b11<<4) // TODO
+.EQU    SCLTR_EL2_DEFAULT_BITS,     ((SCTLR_UCI_BIT) | (SCTLR_nTWE_BIT) | (SCTLR_nTWI_BIT) | (SCTLR_SP_ALIGN_CHECK_EL0_BIT) | (SCTLR_SP_ALIGN_CHECK_BIT)) // TODO
+.EQU    SCTLR_EL2_DEFAULT,          (SCLTR_EL2_RESERVED | SCLTR_EL2_DEFAULT_BITS)
 
 //------------------------------------------------------------------------------
 // SCTLR_EL1_DEFAULT
 //------------------------------------------------------------------------------
-.EQU    SCLTR_EL1_RESERVED,         (0)
-.EQU    SCLTR_EL1_DEFAULT_BITS,     ((SCTLR_DSSBS_BIT) | (SCTLR_UCI_BIT) | (SCTLR_nTWE_BIT) | (SCTLR_nTWI_BIT) | (SCTLR_SP_ALIGN_CHECK_EL0_BIT) | (SCTLR_SP_ALIGN_CHECK_BIT) | (SCTLR_ALIGN_CHECK_BIT))
+.EQU    SCLTR_EL1_RESERVED,         (0b11<<28 | 0b11<<22 | 1<<20 | 1<<11)
+.EQU    SCLTR_EL1_DEFAULT_BITS,     ((SCTLR_nTWE_BIT) | (SCTLR_nTWI_BIT) | SCTLR_CP15BEN_BIT | (SCTLR_SP_ALIGN_CHECK_EL0_BIT) | (SCTLR_SP_ALIGN_CHECK_BIT))
 .EQU    SCTLR_EL1_DEFAULT,          (SCLTR_EL1_RESERVED | SCLTR_EL1_DEFAULT_BITS)
 
 //------------------------------------------------------------------------------
 // SCTLR_EL1_DEFAULT
 //------------------------------------------------------------------------------
 
-.EQU    SCR_EL3_DEFAULT,            (0)     // TODO
+.EQU    SCR_EL3_DEFAULT,            (1<<8)     // TODO

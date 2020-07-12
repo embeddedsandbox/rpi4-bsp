@@ -23,21 +23,10 @@
 .include "aarch64.i"
 .include "config.i"
 
-.EQU    MAGIC_NUMBER,       0x5AFE570B
 .EQU    KERNEL_ENTRY,       0x00080000
 .EQU    SYSTEM_TIMER_FREQ,  54000000
 .EQU    ARM_LOCAL_CONTROL,  0x4c0000000
 .EQU    CACHE_TYPE_MASK,    0x00000007
-
-.EQU    MEM_DESC_DRAM,                      0xFFFFA5A500000002
-.EQU    MEM_DESC_VIDEO_RAM,                 0xFFFFA5A500000003
-.EQU    MEM_DESC_VID_L2_CACHED_ALLOC,       0xFFFFA5A500000005
-.EQU    MEM_DESC_VID_L2_CACHED_NONALLOC,    0xFFFFA5A500000006
-.EQU    MEM_DESC_MMIO,                      0xFFFFA5A500000007
-.EQU    MEM_DESC_PCIE_MMIO,                 0xFFFFA5A500000008
-.EQU    MEM_DESC_TABLE_END,                 0xFFFFA5A5AAAAAAAA
-
-
 
 
 //-----------------------------------------------------------------------------
@@ -54,7 +43,7 @@ _start:
     LDR     X0, =SCTLR_EL3_DEFAULT
     MSR     SCTLR_EL3, X0
 
-    MRS     X0, SCTLR_EL2
+    MRS     X1, SCTLR_EL2
     LDR     X0, =SCTLR_EL2_DEFAULT
     MSR     SCTLR_EL2, X0
 
@@ -72,6 +61,12 @@ _start:
     MOV	    X2, SCR_SECURE_STATE_AARCH64 
     ORR	    X1, X1, X2
     MSR	    SCR_EL3, X1
+
+// Set the SMPEN bit in the CPU Extended Control Reg EL1
+    MRS     X0, S3_1_c15_c2_1
+    MOV     X1, (1<<6)
+    ORR     X0, X0, X1
+    MSR     S3_1_c15_c2_1, X0
 
     MRS     X0, CurrentEL
 
@@ -185,7 +180,6 @@ _start:
     // Put the CPU into a default execution state.  This will get fixed up
     // right before we move to another exception level
     //-------------------------------------------------------------------------
-
     MOV	    X1, SPSR_AARCH64_EL1_SP1    // EL1 Execution State
     MSR	    SPSR_EL3, X1
 
@@ -199,16 +193,6 @@ secureOsInit:
     LDR     X4, [X4]
     BR      X4
 
-/*
-    //----------------------------------
-    // jump to the kernel Entry point 
-    //----------------------------------
-    MOV     X0, topOfMemory
-    MOV     X1, peripheralBaseAddr 
-    ADR     X3, kernelEntry
-    LDR     X0, [X0]
-    BR      X0
-*/
 
 cpuSpin:
     B       .
@@ -418,71 +402,6 @@ deviceTree:
 
 kernelEntry:
     .dword   KERNEL_ENTRY
-
-//--------------------------
-//
-//--------------------------
-.balign (0x100)
-stub_magic:
-    .word       MAGIC_NUMBER
-
-version:
-    .word      0x00000000
-
-dtb_ptr32:
-    .word 0
-
-kernel_entry:
-    .word 0
-
-
-//=============================================================================
-//
-//=============================================================================
-// Hard code this for now.  Will Generate this later
-memory_descriptor_table:
-    // First 512Mb
-    .dword      MEM_DESC_DRAM
-    .dword      0x0000000000000000
-    .dword      0x0000000020000000
-
-    // Second 512Mb
-    .dword      MEM_DESC_VIDEO_RAM
-    .dword      0x0000000020000000
-    .dword      0x0000000020000000
-
-    // 3Gb of Normal Memory
-    .dword      MEM_DESC_DRAM
-    .dword      0x0000000040000000
-    .dword      0x00000000C0000000
-
-    .dword      MEM_DESC_VID_L2_CACHED_ALLOC
-    .dword      0x0000000400000000
-    .dword      0x0000000040000000
-
-    // Main Peripherals
-    .dword      MEM_DESC_MMIO
-    .dword      0x000000047C000000
-    .dword      0x0000000004000000
-
-    // VC L2 CACHED
-    .dword      MEM_DESC_VID_L2_CACHED_NONALLOC
-    .dword      0x0000000480000000
-    .dword      0x0000000040000000
-
-    // ARM Local Peripherals
-    .dword      MEM_DESC_MMIO
-    .dword      0x00000004C0000000
-    .dword      0x0000000030000000
-
-    // PCI MEMORY
-    .dword      MEM_DESC_PCIE_MMIO
-    .dword      0x0000000060000000
-    .dword      0x0000000020000000
-
-    .dword      MEM_DESC_TABLE_END
-    .dword      MEM_DESC_TABLE_END
-    .dword      MEM_DESC_TABLE_END  
 
 //=============================================================================
 //

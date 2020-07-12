@@ -28,8 +28,7 @@
 #include "platform.h"
 #include "mmu.h"
 
-status_t mmuBuildTable(void);
-
+static status_t platformBuildTable(void);
 
 //-----------------------------------------------------------------------------
 // platform Init.   Platform Specific Initialization
@@ -82,10 +81,10 @@ void platformInit(void)
         }
     }
 
-    _brk();  
-    uintptr_t mmuTranslationTableStart = gTopOfMemory - (100 * 1024 * 1024) + 1;
+    uintptr_t mmuTranslationTableStart = gTopOfMemory - (100 * 1024 * 1024) + 1;  // TODO clean up these magic numbers.
     uintptr_t mmuTranslationTableSize = (100 * 1024 * 1024);
     MmuInit(mmuTranslationTableStart, mmuTranslationTableSize);
+    platformBuildTable();
 
     FbInit(); 
 }
@@ -94,48 +93,56 @@ void platformInit(void)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-status_t mmuBuildTable()
+static status_t platformBuildTable(void)
 {
+    
     // map the Kernel Memory 
-    uint64_t memoryRegionStart = 0;
-    uint64_t memoryRegionSize = 0xFFFFF; // 1st 1 Meg of RAM is for the kernel (for now)
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0); // Normal Memory Cache enabled privileged 
+    uint64_t memoryRegionStart  = 0;
+    uint64_t memoryRegionSize   = 0x100000; // 1st 1 Meg of RAM is for the kernel (for now)
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_NORMAL_MEM_CACHEABLE); // Normal Memory Cache enabled privileged 
 
     // map the memory range from 0 to the start of Video RAM
-    memoryRegionStart = 0x100000;
-    memoryRegionSize = gLowMemory[1];
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0); // Normal Memory Cache enabled not privileged
+    memoryRegionStart   = 0x100000;
+    memoryRegionSize    = gLowMemory[1] - 0x100000;
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_NORMAL_MEM_CACHEABLE); // Normal Memory Cache enabled not privileged
 
     // map the memory range for Video RAM
-    memoryRegionStart = gVideoMemory[0];
-    memoryRegionSize = gVideoMemory[1];
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0);  // Cache disabled privileged 
+    memoryRegionStart   = gVideoMemory[0];
+    memoryRegionSize    = gVideoMemory[1];
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_NORMAL_MEM_NONCACHEABLE);  // Cache disabled privileged 
 
     // Map the reset of Memory below the TTs
-    memoryRegionStart = ((1024) * (1024) * (1024));
-    memoryRegionSize = (gTopOfMemory - memoryRegionStart - (100 * 1024 * 1024) + 1);
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0);  // Normal Memory Cache enabled not Privileged 
+    memoryRegionStart   = ((1024) * (1024) * (1024));  // TODO clean up these magic numbers.
+    memoryRegionSize    = (gTopOfMemory - memoryRegionStart - (100 * 1024 * 1024) + 1);
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_NORMAL_MEM_CACHEABLE);  // Normal Memory Cache enabled not Privileged 
 
     // Map TTs
-    memoryRegionStart = gTopOfMemory - ((1024) * (1024) * (1024)) + 1;
+    memoryRegionStart = gTopOfMemory - ((1024) * (1024) * (1024)) + 1; // TODO clean up these magic numbers.
     memoryRegionSize = (100 * 1024 * 1024);
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0);  // Normal Memory Cache enabled Privileged  
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_NORMAL_MEM_CACHEABLE);  // Normal Memory Cache enabled Privileged  
+
+    // Map VC Mailbox interface
+    memoryRegionStart = 0x47E00B000; // TODO clean up these magic numbers.
+    memoryRegionSize =  4 * 1024;
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_DEVICE_IO);  // Normal Memory Cache enabled Privileged  
 
 #if 0
     // Map The Gic Distributor MMIO
-    memoryRegionStart = GIC_START_ADDRESS;
+    memoryRegionStart = GIC_DISTRIBUTOR_START_ADDRESS;
     memoryRegionSize = ;
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0);  // Device Memory Disabled Cache privileged 
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_DEVICE_IO);  // Device Memory Disabled Cache privileged 
 
     // Map The Gic CPU MMIO
-    memoryRegionStart = GIC_START_ADDRESS;
+    memoryRegionStart = GIC_CPU_START_ADDRESS;
     memoryRegionSize = ;
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0);  // Device Memory Disabled Cache privileged 
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MMU_BLOCK_DESC_DEVICE_MEM_SECURE_NONCACHEABLE);  // Device Memory Disabled Cache privileged 
 
     // Map EMMC MMIO
-    memoryRegionStart = GIC_START_ADDRESS;
+    memoryRegionStart = EMMC_START_ADDRESS;
     memoryRegionSize = ;
-    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, 0, 0);  // Device Memory Disabled Cache privileged 
+    MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MMU_BLOCK_DESC_DEVICE_MEM_SECURE_NONCACHEABLE);  // Device Memory Disabled Cache privileged 
 #endif 
+    MmuEnable();
+
     return STATUS_SUCCESS;
 }

@@ -25,8 +25,8 @@
 //------------------------------------------------------------------------------
 // SCR REGISTER EQUATES
 //------------------------------------------------------------------------------
-.EQU	SCR_SECURITY_EXECUTION_STATE_MASK,  (~0x0000000401)
-.EQU	SCR_NON_SECURE_STAT_AARCH64,        ( 0x0000000401)
+.EQU	SCR_SECURITY_EXECUTION_STATE_MASK,  (~0x0000000401)     // Need to look at this closer. the bit 10 is supposed to be reserved
+.EQU	SCR_NON_SECURE_STATE_AARCH64,       ( 0x0000000401)
 .EQU	SCR_SECURE_STATE_AARCH64,           ( 0x0000000400)
 
 
@@ -62,20 +62,20 @@
 //  SCTLR REGISTER EQUATES
 //------------------------------------------------------------------------------
 
-.EQU    SCTLR_DSSBS_BIT,                (1<<44)
-.EQU    SCTLR_ATA_BIT,                  (1<<43)
-.EQU    SCTLR_ATA0_BIT,                 (1<<42)
-.EQU    SCTLR_TCF_DISABLE,              (0x0<<40)
-.EQU    SCTLR_TCF_SYNC_EXCEPT,          (0x1<<40)
-.EQU    SCTLR_TCF_ASYNC_EXCEPT,         (0x2<<40)
-.EQU    SCTLR_ITFSB_BIT,                (1<<37)
-.EQU    SCTLR_BT_BIT,                   (1<<36)
-.EQU    SCTLR_BT0_BIT,                  (1<<35)
-.EQU    SCTLR_EnIA_START_BIT,           (1<<31)
-.EQU    SCTLR_EnIB_START_BIT,           (1<<30)
-.EQU    SCTLR_LSMAOE_BIT,               (1<<29)
-.EQU    SCTLR_nTLSMD_BIT,               (1<<28)
-.EQU    SCTLR_EnDA_START_BIT,           (1<<27)
+//.EQU    SCTLR_DSSBS_BIT,                (1<<44)
+//.EQU    SCTLR_ATA_BIT,                  (1<<43)
+//.EQU    SCTLR_ATA0_BIT,                 (1<<42)
+//.EQU    SCTLR_TCF_DISABLE,              (0x0<<40)
+//.EQU    SCTLR_TCF_SYNC_EXCEPT,          (0x1<<40)
+//.EQU    SCTLR_TCF_ASYNC_EXCEPT,         (0x2<<40)
+//.EQU    SCTLR_ITFSB_BIT,                (1<<37)
+//.EQU    SCTLR_BT_BIT,                   (1<<36)
+//.EQU    SCTLR_BT0_BIT,                  (1<<35)
+//.EQU    SCTLR_EnIA_START_BIT,           (1<<31)
+//.EQU    SCTLR_EnIB_START_BIT,           (1<<30)
+//.EQU    SCTLR_LSMAOE_BIT,               (1<<29)
+//.EQU    SCTLR_nTLSMD_BIT,               (1<<28)
+//.EQU    SCTLR_EnDA_START_BIT,           (1<<27)
 .EQU    SCTLR_UCI_BIT,                  (1<<26)
 .EQU    SCTLR_EE_START_BIT,             (1<<25)
 .EQU    SCTLR_EOE_BIT,                  (1<<24)
