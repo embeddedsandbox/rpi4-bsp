@@ -23,12 +23,65 @@
 #include "types.h"
 #include "../../rtos/include/process.h"
 #include "memory.h"
+#include "devices.h"
+#include "platform.h"
+
 #include "mailbox.h"
 #include "framebuffer.h"
-#include "platform.h"
-#include "mmu.h"
+#include "gic400.h"
+
 
 static status_t platformBuildTable(void);
+
+
+memoryDescriptor_t  platformMemory[3];
+device_t            platformDeviceList[] = 
+{
+    // GIC400 Distributor
+    {
+        .driverInit         = Gic400DistributorInit,
+        .mmio.memoryBase    = 0x4C0041000ULL,
+        .mmio.memorySize    = 4*1024,
+        .mmio.memoryType    = MEM_TYPE_DEVICE_MEMORY,
+        .mem.memoryBase     = 0,
+        .mem.memorySize     = 0,
+        .mem.memoryType     = MEM_TYPE_NONE,
+    },
+   
+    // GIC400 CPU
+   {
+        .driverInit         = Gic400CpuInit,
+        .mmio.memoryBase    = 0x4C0042000ULL,
+        .mmio.memorySize    = 4*1024,
+        .mmio.memoryType    = MEM_TYPE_DEVICE_MEMORY,
+        .mem.memoryBase     = 0,
+        .mem.memorySize     = 0,
+        .mem.memoryType     = MEM_TYPE_NONE,        
+    },
+/*
+    // rpi Video
+    {
+        .driverInit         = frameBufferInit,
+        .mmio.memoryBase    = 0,
+        .mmio.memorySize    = 0,
+        .mmio.memoryType    = MEM_TYPE_NONE,
+        .mem.memoryBase     = 0,
+        .mem.memorySize     = 0,
+        .mem.memoryType     = MEM_TYPE_VIDEO_MEMORY,
+    },
+*/
+    // EndOfListTag
+    {
+        .driverInit         = NULL,
+        .mmio.memoryBase    = -1,
+        .mmio.memorySize    = -1,
+        .mmio.memoryType    = -1,
+        .mem.memoryBase     = -1,
+        .mem.memorySize     = -1,
+        .mem.memoryType     = -1,
+    },
+};
+
 
 //-----------------------------------------------------------------------------
 // platform Init.   Platform Specific Initialization
@@ -81,21 +134,34 @@ void platformInit(void)
         }
     }
 
-    uintptr_t mmuTranslationTableStart = gTopOfMemory - (100 * 1024 * 1024) + 1;  // TODO clean up these magic numbers.
-    uintptr_t mmuTranslationTableSize = (100 * 1024 * 1024);
-    MmuInit(mmuTranslationTableStart, mmuTranslationTableSize);
     platformBuildTable();
-
-    FbInit(); 
 }
-
 
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
 static status_t platformBuildTable(void)
 {
-    
+    // fill in the platform memory table
+
+    platformMemory[0].memoryBase    = gLowMemory[0];
+    platformMemory[0].memorySize    = gLowMemory[1];
+    platformMemory[0].memoryType    = MEM_TYPE_NORMAL_MEMORY;
+
+    platformMemory[1].memoryBase    = ((1024) * (1024) * (1024));  // TODO clean up these magic numbers
+    platformMemory[1].memorySize    = (gTopOfMemory + 1) - ((1024) * (1024) * (1024));
+    platformMemory[1].memoryType    = MEM_TYPE_NORMAL_MEMORY;
+
+    platformMemory[2].memoryBase    = -1;
+    platformMemory[2].memorySize    = -1;
+    platformMemory[2].memoryType    = -1;
+
+    // fill in the video memory information
+    platformDeviceList[1].mem.memoryBase   = gVideoMemory[0];
+    platformDeviceList[1].mem.memorySize   = gVideoMemory[1];
+
+#if 0
+
     // map the Kernel Memory 
     uint64_t memoryRegionStart  = 0;
     uint64_t memoryRegionSize   = 0x100000; // 1st 1 Meg of RAM is for the kernel (for now)
@@ -112,7 +178,7 @@ static status_t platformBuildTable(void)
     MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_NORMAL_MEM_NONCACHEABLE);  // Cache disabled privileged 
 
     // Map the reset of Memory below the TTs
-    memoryRegionStart   = ((1024) * (1024) * (1024));  // TODO clean up these magic numbers.
+    memoryRegionStart   = 
     memoryRegionSize    = (gTopOfMemory - memoryRegionStart - (100 * 1024 * 1024) + 1);
     MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_NORMAL_MEM_CACHEABLE);  // Normal Memory Cache enabled not Privileged 
 
@@ -126,16 +192,18 @@ static status_t platformBuildTable(void)
     memoryRegionSize =  4 * 1024;
     MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_DEVICE_IO);  // Normal Memory Cache enabled Privileged  
 
-#if 0
+
     // Map The Gic Distributor MMIO
-    memoryRegionStart = GIC_DISTRIBUTOR_START_ADDRESS;
-    memoryRegionSize = ;
+    memoryRegionStart = 0x4C0040000ULL; //GIC_DISTRIBUTOR_START_ADDRESS;
+    memoryRegionSize = 32*1024;
     MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MEM_REGION_DEVICE_IO);  // Device Memory Disabled Cache privileged 
 
+#if 0
     // Map The Gic CPU MMIO
     memoryRegionStart = GIC_CPU_START_ADDRESS;
     memoryRegionSize = ;
     MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MMU_BLOCK_DESC_DEVICE_MEM_SECURE_NONCACHEABLE);  // Device Memory Disabled Cache privileged 
+
 
     // Map EMMC MMIO
     memoryRegionStart = EMMC_START_ADDRESS;
@@ -143,6 +211,7 @@ static status_t platformBuildTable(void)
     MmuMapRange(memoryRegionStart, memoryRegionStart, memoryRegionSize, MMU_BLOCK_DESC_DEVICE_MEM_SECURE_NONCACHEABLE);  // Device Memory Disabled Cache privileged 
 #endif 
     MmuEnable();
+#endif
 
     return STATUS_SUCCESS;
 }

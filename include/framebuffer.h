@@ -60,7 +60,7 @@ typedef struct
     fbScreenLocation_t  cursorLocation;
 } fbDisplayBuffer_t;
 
-void FbInit(void);
+status_t frameBufferInit(void* a, uint32_t b);
 
 
 #endif

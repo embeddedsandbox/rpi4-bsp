@@ -25,6 +25,7 @@
 #include "boot.h"
 #include "devices.h"
 #include "gic400.h"
+#include "gic400_internal.h"
 
 //=============================================================================
 // LOCAL VARIABLES

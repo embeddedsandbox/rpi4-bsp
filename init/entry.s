@@ -125,7 +125,10 @@ sos_synchronous_cur_el_spx:
 
 .balign(0x80)
 sos_irq_cur_el_spx:
-    B	.
+    // may need to save registers
+    BL      InterruptDispatcher
+    // may need to restore registers 
+    ERET
 
 .balign(0x80)
 sos_fiq_cur_el_spx:
@@ -144,7 +147,10 @@ sosSyncLwrEl_aarch64:
 
 .balign(0x80)
 sosIrqLwrEl_aarch64:
-    B	.
+    // may need to save registers
+    BL  InterruptDispatcher
+    // may need to restore registers
+    ERET
 
 .balign(0x80)
 sosFiqLwrEl_aarch64:

@@ -30,7 +30,7 @@
 
 fbDisplayBuffer_t   displays[2]; // TODO get rid of magic number 
 
-void FbInit(void)
+status_t frameBufferInit(void* a, uint32_t b)
 {
     static mbxMessage_t     fbMbxMsg;
     displays[0].physSpecs.width     = 1280;
@@ -61,4 +61,6 @@ void FbInit(void)
         MbxUnpackNextTagResp(&fbMbxMsg, NULL, (uint32_t*)&displays[0].physSpecs);
         MbxUnpackNextTagResp(&fbMbxMsg, NULL, &displays[0].colorDepth);
     }
+
+    return STATUS_SUCCESS;
 }

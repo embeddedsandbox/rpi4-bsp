@@ -156,6 +156,8 @@ _start:
     LDR	    X1, [x1]
     MOV	    SP, X1    
 
+    BL _cache_CleanCache
+
     //-------------------------------------------------------------------------
     // initialize the CPU specific peripherals (gic, local timer, etc.
     //-------------------------------------------------------------------------
@@ -200,83 +202,91 @@ cpuSpin:
 //-----------------------------------------------------------------------------
 // cache disable & clean
 //-----------------------------------------------------------------------------
-_cache_disableAndCleanCache:
+_cache_CleanCache:
     // X17  <= CLIDR_EL1
     // X16  <= Max Cache Level
     // W15  <= Current Cache level
-    // W14  <= max way register aligned for DC command
-    // W13  <= way decrement by value
-    // W12  <= max set register aligned for DC command
-    // W11  <= set decrement value 
-    // w10  <= 1
-
-    // W8   <= current way
-    // W7   <= current set
+    // W14  <= max way register 
+    // X13  <= max set register
+    // X12  <= log2 line size
+    // X11  <= current CCSIDR_EL1
+    // X8   <= current way
+    // X7   <= current set
 
     MRS     X1, SCTLR_EL3	            // get the current sctlr_el3 register
     BIC	    X1, X1, 0x00000004	        // Clear the DCache enable bit
     MSR	    SCTLR_EL3, X1	            // write value back to sctlr_el3
 
-    MRS     X1, CLIDR_EL1
-    UBFX    W16, W1, #23, #3 
+    MRS     X17, CLIDR_EL1
+    UBFX    W16, W17, #24, #3 
 
-    CBZ     W0, dcc_done
+    CBZ     X16, cc_done
 
     MOV     X15, XZR
     MOV     X10, #1
 
-dcc_cacheLevelLoop:
+cc_cacheLevelLoop:
     // figure out if we need to do anything for this cache level
-    ADD     W0, W15, W15, LSL #1        // W0 = 3xCache level
-    LSR     W1, W17, W0                 // W1 = Cache type for level in W0
-    AND     W1, W1, #CACHE_TYPE_MASK    // mas 
-    CMP     W1, #2                      
-    BLT     dcc_nextCacheLvl            // If this cache level cache type isn't something we need to clear skip it
+    ADD     X0, X15, X15, LSL #1        // W0 = 3xCache level
+    LSR     X1, X17, X0                 // W1 = Cache type for level in W0
+    AND     X1, X1, #CACHE_TYPE_MASK    // mas 
+    CMP     X1, #2                      
+    BLT     cc_nextCacheLvl            // If this cache level cache type isn't something we need to clear skip it
 
     // flush this cache level
-    LSL     X0, X15, #1                 // put the cache level into the correct git location
+    LSL     X0, X15, #1                 // put the cache level into the correct bit location
     MSR     CSSELR_EL1, X0              // select the next cache level
     ISB                                 // make sure that the cache select has taken affect
 
-    MRS     X0, CCSIDR_EL1              // get the cache size ID register
+    MRS     X11, CCSIDR_EL1             // get the cache size ID register   
+    
+    AND     X12, X11, #0x7              // X1 = log2-4 of the cache line size out of Cache  Size Id reg
+    ADD     X12, X12, #4                // X1 = log2 of cache size   
+
+    // get the max set value - 1
+    UBFX    X13, X11, #13, #15          // extract the Max Set value from CCSIDR
 
     // get the Way variables setup
-    UBFX    W14, W0, #3, #10            // extract the Max Way value from CCSIDR 
+    UBFX    X14, X11, #3, #10           // extract the Max Way value from CCSIDR 
     CLZ     W2, W14                     // Count Leading Zeros (bit position of ways start)
 
-    LSL     W13, W10, W2                // way decrement value
-    LSL     W14, w14, W2                // max way register aligned for DC command. 
+    MOV     X8, 0                       // start with way 0
 
-    // get the Set Variables setup
-    AND     W1, W0, #0x00000007         // W1 = log2-4 of the cache line size out of Cache  Size Id reg
-    ADD     W1, W1, #4                  // W1 = log2 of cache size   
-    UBFX    W12, W0, #13, #14           // extract the Max Set value from CCSIDR
-    LSL     W12, W12, W1                // max set aligned for DC command
-    LSL     W11, W10, W1                // set decrement value = 1 << log2 of line length aligned for DC Command
+cc_wayLoop:
+    MOV     X7, 0                       // start with set 0
 
-    MOV     W8, W14
+cc_setLoop:
+    LSL     X0, X8,  X2
+    ORR     X0, X15, X0
+    LSL     X3, X7,  X12
+    ORR     X0, X0,  X3
 
-dcc_wayLoop:
-    MOV     W7, W14                     // start over from the max Set
-
-dcc_setLoop:
-    ORR     W0, W8, W15, LSL #1         // combine the cache level and the  
-    ORR     W0, W0, W7                  //
     DC      CISW, X0                    // Clean and Invalidate Cache line
 
-    SUBS    W7, W7, W11                 // decrement set loop control
-    BGE     dcc_setLoop                 // bottom of set loop
+    ADD     X7, X7, #1                   // increment current set value
+    CMP     X7, X13
+    BLE     cc_setLoop                 
 
-    SUBS    X8, X8, X13                 // decrement way loop control
-    BGE     dcc_wayLoop                 
+    ADD     X8, X8, #1                   // increment way value
+    CMP     X8, X14
+    BLE     cc_wayLoop                 
 
-dcc_nextCacheLvl:
-    DSB     SY
-    ADD     W15, W15, #1                // increment to the next cache level
-    CMP     W16, W15                    // check if still cache levels to handle 
-    BGT     dcc_cacheLevelLoop          // bottom of cache level set loop
+cc_nextCacheLvl:
+    DSB     SY                          // wait for all everything to complete for that loop
+    ADD     X15, X15, #1                // increment to the next cache level
+    CMP     X15, X16                    // check if still cache levels to handle 
+    BLE     cc_cacheLevelLoop           // bottom of cache level set loop
 
-dcc_done:
+cc_done:
+
+    IC IALLU                            // invalidate all of the instruction cache
+    DMB     SY
+
+    // RE-ENABLE THE CACHE here
+    MRS     X1, SCTLR_EL3	            // get the current sctlr_el3 register
+    MOV     X0, #(1<<2) | (1<<12)
+    ORR	    X1, X1, X0                  // Set the Cache enable bits
+    MSR	    SCTLR_EL3, X1	            // write value back to sctlr_el3
 
     ret
 
