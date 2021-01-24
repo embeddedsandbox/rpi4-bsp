@@ -1,0 +1,4 @@
+[submodule "openocd-raspi4"]
+	path = openocd-raspi4
+	url = git@github.com:embeddedsandbox/openocd-raspi4.git
+	branch = master
