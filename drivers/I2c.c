@@ -19,3 +19,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
 // THE SOFTWARE.
 //=============================================================================
+
+// TODO add a return value for success, failure or busy?
+void write_device(uint8_t deviceAddr, uint16_t byteCount, uint8_t* buffer )
+{
+
+}
+
+// TODO add a return value for success, failure or busy?
+void read_device(uint8_t deviceAddr, uint16_t byteCount, uint8_t* buffer )
+{
+
+}
